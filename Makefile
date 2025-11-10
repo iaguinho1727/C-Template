@@ -1,7 +1,7 @@
 # Basic Makefile for static or shared C library
 
 # Compiler and archiver
-CC = gcc
+CC = g++
 AR = ar
 ARFLAGS = rcs
 
@@ -22,12 +22,13 @@ INSTALL_LIB_DIR=/usr/lib/$(LIB_BASENAME)
 IS_SHARED ?= 0
 
 # Source and object files
-SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+SRC_EXTENSION=cpp
+SRCS = $(wildcard $(SRC_DIR)/*.$(SRC_EXTENSION))
+OBJS = $(SRCS:$(SRC_DIR)/%.$(SRC_EXTENSION)=$(OBJ_DIR)/%.o)
 TEST_DESTINATION=$(OUT_DIR)/tests
 TEST_DIR=tests
-TEST_SRCS=$(wildcard $(TEST_DIR)/*.c)
-TEST_EXECUTABLES=$(TEST_SRCS:$(TEST_DIR)/%.c=$(TEST_DESTINATION)/%.$(EXECUTABLE_EXTENSION))
+TEST_SRCS=$(wildcard $(TEST_DIR)/*.$(SRC_EXTENSION))
+TEST_EXECUTABLES=$(TEST_SRCS:$(TEST_DIR)/%.$(SRC_EXTENSION)=$(TEST_DESTINATION)/%.$(EXECUTABLE_EXTENSION))
 
 # Common compilation flags
 CFLAGS = -g -Wall -Wextra -I$(INCLUDE_DIR)
