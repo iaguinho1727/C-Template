@@ -9,85 +9,72 @@ ARFLAGS = rcs
 SRC_DIR = src
 OUT_DIR = out
 INCLUDE_DIR = include
-LIB_DIR=$(OUT_DIR)/lib
 OBJ_DIR=$(OUT_DIR)/obj
 EXECUTABLE_EXTENSION=out
-LIB_BASENAME = IGStructures
-INSTALL_HEADER_DIR=/usr/include/$(LIB_BASENAME)
-INSTALL_LIB_DIR=/usr/lib/$(LIB_BASENAME)
+BIN_FOLDER=$(OUT_DIR)/bin
+EXECUTABLE_BASENAME = NatoInvaders
+# INSTALL_HEADER_DIR=/usr/include/$(EXCUTABLE_BASENAME)
+# INSTALL_EXECUTABLE_DIR=/usr/lib/$(EXCUTABLE_BASENAME)
 
 # Library name (without prefix/suffix)
 
 # Choose build type: static or shared (default: static)
-IS_SHARED ?= 0
 
 # Source and object files
-SRC_EXTENSION=cpp
-SRCS = $(wildcard $(SRC_DIR)/*.$(SRC_EXTENSION))
-OBJS = $(SRCS:$(SRC_DIR)/%.$(SRC_EXTENSION)=$(OBJ_DIR)/%.o)
-TEST_DESTINATION=$(OUT_DIR)/tests
-TEST_DIR=tests
-TEST_SRCS=$(wildcard $(TEST_DIR)/*.$(SRC_EXTENSION))
-TEST_EXECUTABLES=$(TEST_SRCS:$(TEST_DIR)/%.$(SRC_EXTENSION)=$(TEST_DESTINATION)/%.$(EXECUTABLE_EXTENSION))
+SRC_EXTENSIONS=cpp hpp
+SRCS =$(foreach ext,$(SRC_EXTENSIONS),$(wildcard $(SRC_DIR)/*.$(ext)) )
+# TEST_DESTINATION=$(OUT_DIR)/tests
+# TEST_DIR=tests
+# TEST_SRCS=$(wildcard $(TEST_DIR)/*.$(SRC_EXTENSION))
+# TEST_EXECUTABLES=$(TEST_SRCS:$(TEST_DIR)/%.$(SRC_EXTENSION)=$(TEST_DESTINATION)/%.$(EXECUTABLE_EXTENSION))
 
 # Common compilation flags
-CFLAGS = -g -Wall -Wextra -I$(INCLUDE_DIR)
-LIB_FILE = lib$(LIB_BASENAME).a
-LIB_DESTINATION_FOLDER=$(OUT_DIR)/lib
-LIB_DESTINATION=$(LIB_DESTINATION_FOLDER)/$(LIB_FILE)	
-LDFLAGS = -l$(LIB_BASENAME) -L$(LIB_DESTINATION_FOLDER)
+PKG_CONFIG_LIBS=sfml-all
+CFLAGS = -g -Wall -Wextra -I$(INCLUDE_DIR) $(shell pkg-config --cflags $(PKG_CONFIG_LIBS))
+EXECUTABLE_DESTINATION=$(BIN_FOLDER)/$(EXECUTABLE_BASENAME).$(EXECUTABLE_EXTENSION)
+LDFLAGS = $(shell pkg-config --libs $(PKG_CONFIG_LIBS))
 # Adjust flags and output name based on build type
-ifeq ($(IS_SHARED),1)
-	CFLAGS += -fPIC
-	LIB_FILE = lib$(LIB_BASENAME).so
-endif
 
 # Default target
-all: $(LIB_DESTINATION) compile_tests
+all: $(EXECUTABLE_DESTINATION)
 
 # --- Build rules ---
 
 # Static library
-$(LIB_DESTINATION): $(OBJS)
-ifeq ($(IS_SHARED),1)
-	$(CC) -shared -o $@ $^
-else
-	$(AR) $(ARFLAGS) $@ $^
-endif
 
 # Object compilation
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c 
-	$(CC) $(CFLAGS) -c $< -o $@
+$(EXECUTABLE_DESTINATION): $(SRCS) 
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-$(TEST_DESTINATION)/%.$(EXECUTABLE_EXTENSION) : $(TEST_DIR)/%.c
-	$(CC)  $(CFLAGS)  $< $(LDFLAGS) -o $@
+# $(TEST_DESTINATION)/%.$(EXECUTABLE_EXTENSION) : $(TEST_DIR)/%.c
+# 	$(CC)  $(CFLAGS)  $< $(LDFLAGS) -o $@
 
 # Ensure object directory exists
-$(OUT_DIR):
-	mkdir -p $(STATIC_LIB_DESTINATION) && mkdir -p $(DYNAMIC_LIB_DESTINATION)
+# $(OUT_DIR):
+# 	mkdir -p $(STATIC_EXECUTABLE_DESTINATION) 
 
-compile_tests: $(TEST_EXECUTABLES)
+# compile_tests: $(TEST_EXECUTABLES)
 
-test:
-	sh $(TEST_DIR)/tests.sh
+# test:
+# 	sh $(TEST_DIR)/tests.sh
 
 
 
 
 valgrind: 
-	valgrind $(EXECUTABLE_PATH)
+	valgrind $(EXECUTABLE_DESTINATION)
 
 
 
-install:
-	mkdir -p $(INSTALL_LIB_DIR)
-	mkdir -p $(INSTALL_HEADER_DIR)
-	cp $(LIB_DESTINATION) $(INSTALL_LIB_DIR)
-	cp $(INCLUDE_DIR)/*.h $(INSTALL_HEADER_DIR)
+# install:
+# 	mkdir -p $(INSTALL_EXECUTABLE_DIR)
+# 	mkdir -p $(INSTALL_HEADER_DIR)
+# 	cp $(EXECUTABLE_DESTINATION) $(INSTALL_EXECUTABLE_DIR)
+# 	cp $(INCLUDE_DIR)/*.h $(INSTALL_HEADER_DIR)
 
 # Clean up
 clean:
-	rm -rf $(LIB_DIR)/* $(OBJ_DIR)/* $(TEST_DESTINATION)/*
+	rm  $(BIN_FOLDER)/* $(OBJ_DIR)/*
 
 # Phony targets
-.PHONY: all clean test valgrind	install 
+.PHONY: all clean valgrind 
